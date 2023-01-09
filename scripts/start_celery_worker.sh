@@ -1,0 +1,1 @@
+celery -A mesidha_backend worker -l INFO

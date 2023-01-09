@@ -1,0 +1,98 @@
+version: '3.3'
+
+services:
+  app:
+    image: mesidha_backend
+    container_name: mesidha_backend
+    build: .
+    env_file:
+      - '../docker-django.env.dev'
+    restart: always
+    command:
+      - "sh"
+      - "/usr/src/mesidha/scripts/start_app.sh"
+    ports:
+      - 8001:8000
+    networks:
+      - mesidha_net
+    depends_on:
+      - db
+      - redis
+  redis:
+    image: redis
+    restart: always
+    command: [ "redis-server" ]
+    container_name: mesidha_redis
+    hostname: mesidha_redis
+    networks:
+      - mesidha_net
+    depends_on:
+      - db
+  celery:
+    command:
+      - "sh"
+      - "/usr/src/mesidha/scripts/start_celery_worker.sh"
+    restart: always
+    build: .
+    container_name: mesidha_celery
+    hostname: mesidha_celery
+    env_file:
+      - '../docker-django.env.dev'
+    volumes:
+      - mesidha_volume:/usr/src/mesidha/mapping_files
+    depends_on:
+      - redis
+      - db
+    networks:
+      - mesidha_net
+  celery-beat:
+    command:
+      - "sh"
+      - "/usr/src/mesidha/scripts/start_celery_beat.sh"
+    build: .
+    container_name: mesidha_celery_beat
+    hostname: mesidha_celery_beat
+    env_file:
+      - '../docker-django.env.dev'
+    depends_on:
+      - redis
+      - db
+    networks:
+      - mesidha_net
+  flower:
+    image: mher/flower
+    container_name: mesidha_flower
+    env_file:
+      - '../docker-django.env.dev'
+    ports:
+      - 8888:8888
+    networks:
+      - mesidha_net
+  db:
+    image: postgres
+    restart: always
+    container_name: mesidha_db
+    hostname: db
+    ports:
+      - 5432:5432
+    networks:
+      - mesidha_net
+    volumes:
+      - mesidha_db_volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=mesidha
+      - POSTGRES_USER=mesidhas
+      - POSTGRES_PASSWORD=9ECDPWD8RWLtrNbmBVW6SSHw
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=10000"
+      - "-c"
+      - "shared_buffers=2GB"
+
+networks:
+  mesidha_net:
+
+volumes:
+  mesidha_volume:
+  mesidha_db_volume:
