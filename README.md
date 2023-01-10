@@ -1,4 +1,4 @@
-# Digest-web Backend service
+# MeSIdHa-web Backend service
 
 Django based backend service for the MeSIdHa web-app.
 

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from mesidha_backend.models import Task
 import json
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -10,6 +9,7 @@ class TaskSerializer(serializers.ModelSerializer):
         return json.loads(obj.parameters)
 
     class Meta:
+        from database.models import Task
         model = Task
         fields = ['algorithm', 'target', 'parameters', 'job_id', 'worker_id', 'progress', 'status', 'created_at',
                   'started_at', 'finished_at', 'done', 'failed']

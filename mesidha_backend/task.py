@@ -1,16 +1,13 @@
-import base64
 from datetime import datetime
 
-import pandas as pd
 import redis
 import rq
 import os
 import json
 
-import mesidha_backend.mesidha_executor
-from mesidha_backend.tasks.task_hook import TaskHook
-from mesidha_backend.models import Attachment, Task
+from mesidha_backend.task_hook import TaskHook
 from mesidha_backend.mailer import error_notification
+from mesidha_backend.mesidha_executor import run_filter
 
 qr_r = redis.Redis(host=os.getenv('REDIS_HOST', 'mesidha_redis'),
                    port=os.getenv('REDIS_PORT', 6379),
@@ -22,22 +19,16 @@ r = redis.Redis(host=os.getenv('REDIS_HOST', 'mesidha_redis'),
                 port=os.getenv('REDIS_PORT', 6379),
                 db=0,
                 decode_responses=True)
-
-
-def get_task(uid) -> Task:
-    return Task.objects.get(uid=uid)
-
+import django
+django.setup()
 
 def run_task(uid, mode, parameters, set_files):
+    from database.models import Task
     def set_status(status):
         r.set(f'{uid}_status', f'{status}')
 
-    def set_result(results):
-        result = json.dumps(results, allow_nan=True)
-        r.set(f'{uid}_result', result)
+    def set_result():
         t = Task.objects.get(uid=uid)
-        t.result = result
-        t.save()
         timestamp = str(datetime.now().timestamp())
         r.set(f'{uid}_finished_at', timestamp)
         r.set(f'{uid}_done', '1')
@@ -59,22 +50,12 @@ def run_task(uid, mode, parameters, set_files):
     task_hook = TaskHook(parameters, set_status, set_result, set_files, set_progress)
     try:
         pass
-        # if mode == 'set':
-        #     mesidha_backend.mesidha_executor.run_set(task_hook)
-        # elif mode == 'subnetwork':
-        #     mesidha_backend.digest_executor.run_subnetwork(task_hook)
-        # elif mode == 'subnetwork-set':
-        #     mesidha_backend.digest_executor.run_subnetwork_set(task_hook)
-        # elif mode == 'id-set':
-        #     mesidha_backend.digest_executor.run_id_set(task_hook)
-        # elif mode == 'set-set':
-        #     mesidha_backend.digest_executor.run_set_set(task_hook)
-        # elif mode == 'cluster':
-        #     mesidha_backend.digest_executor.run_cluster(task_hook)
+        if mode == 'filter':
+            run_filter(task_hook)
 
     except Exception as e:
-        print("Error in DIGEST execution:")
-        error_notification(f"Error in DIGEST execution for {uid}.\nError indicator: {e}")
+        print("Error in MeSIdHa execution:")
+        error_notification(f"Error in MeSIdHa execution for {uid}.\nError indicator: {e}")
         r.set(f'{uid}_failed', '1')
         import traceback
         traceback.print_exc()
@@ -105,18 +86,15 @@ def refresh_from_redis(task):
 
 
 def save_files_to_db(files, uid):
+    from database.models import Attachment
+    from mesidha_backend.views import get_wd
     for (type, entries) in files.items():
         for (name, file) in entries.items():
-            content = bytearray()
-            with open(file, 'rb') as fh:
-                for line in fh:
-                    content += line
-            #         TODO change to saving path of file
-            Attachment.objects.create(uid=uid, name=name, type=type, path="")
+            Attachment.objects.create(uid=uid, name=name, path=os.path.join(get_wd(uid),name))
 
 
 def start_task(task):
-    job = rq_tasks.enqueue(run_task, task.uid, task.mode, task.parameters, save_files_to_db, job_timeout=60 * 60)
+    job = rq_tasks.enqueue(run_task, task.uid, task.mode, json.loads(task.parameters), save_files_to_db, job_timeout=60 * 60)
     task.job_id = job.id
     task.started = True
     task.status = "Queued"

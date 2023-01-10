@@ -1,9 +1,9 @@
-import os
-from celery import shared_task
+# import os
+# from celery import shared_task
 from celery.utils.log import get_task_logger
 
-import mesidha_backend.mesidha_executor
-import json
+# import mesidha_backend.mesidha_executor
+# import json
 
 logger = get_task_logger(__name__)
 

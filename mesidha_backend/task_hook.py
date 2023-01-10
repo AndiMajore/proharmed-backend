@@ -33,11 +33,11 @@ class TaskHook:
     def set_files(self, files, uid):
         self.__set_files(files, uid)
 
-    def set_results(self, results):
+    def set_results(self):
         """
         To be called when the computation is finished.
 
         :param results: A dictionary containing a networks entry, each network having nodes and edges.
         (e.g. {"network": {"nodes": ["P61970", "Q9H4P4"], "edges": [{"from": "P61970", "to": "Q9H4P4"}]}})
         """
-        self.__set_result(results)
+        self.__set_result()

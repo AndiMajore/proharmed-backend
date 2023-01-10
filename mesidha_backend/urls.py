@@ -15,8 +15,7 @@ Including another URLconf
 """
 from django.urls import path
 
-from mesidha_backend.views import set, set_set, subnetwork, subnetwork_set, cluster, get_files, get_status, get_result, \
-    get_result_file_list, get_result_file, get_network_file, get_sc_status,get_sc_results,get_sc_top_results,run_examples, download_file, upload_file
+from mesidha_backend.views import *
 
 urlpatterns = [
     path('set_set', set_set),
@@ -26,16 +25,21 @@ urlpatterns = [
     path('clustering', cluster),
     path('network_file', get_network_file),
     path('files', get_files),
-    path('status', get_status),
-    path('result', get_result),
     path('result_file_list', get_result_file_list),
     path('result_file', get_result_file),
     path('sc_status', get_sc_status),
     path('sc_results', get_sc_results),
     path('sc_top_results', get_sc_top_results),
     path('run_examples', run_examples),
+
+    # path('result', get_result),
+    path('get_preview', get_preview),
+    path('status', get_status),
     path('download_file', download_file),
-    path('upload_file', upload_file)
+    path('upload_file', upload_file),
+    path('init_task', init_task),
+    path('get_input', get_input),
+    path('run_filter', run_filter),
     # path('update',run_update),
     # path('sig_cont', run_sig_cont)
 ]

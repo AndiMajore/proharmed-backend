@@ -6,9 +6,9 @@ import uuid
 from datetime import datetime
 from urllib.request import Request
 
+import pandas as pd
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse, Http404
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.utils.encoding import smart_str
 from django.http import StreamingHttpResponse
@@ -19,7 +19,7 @@ from rest_framework.parsers import MultiPartParser
 
 from mesidha_backend import preparation
 from django.views.decorators.cache import never_cache
-from mesidha_backend.models import Task, Attachment, Notification
+from database.models import Task, Attachment, Notification
 from mesidha_backend.task import start_task, refresh_from_redis, task_stats
 from mesidha_backend.versions import get_version
 
@@ -157,6 +157,14 @@ def run_id_set(data):
     return run("id-set", data, params)
 
 
+@api_view(['GET'])
+def get_preview(request) -> Response:
+    uid = request.GET.get('uid')
+    name = request.GET.get('filename')
+    df = pd.read_csv(os.path.join(get_wd(uid), name))
+    return Response(df.head(5).to_json())
+
+
 @never_cache
 @api_view(['GET'])
 def get_status(request) -> Response:
@@ -172,8 +180,6 @@ def get_status(request) -> Response:
         'status': task.status,
         'stats': task_stats(task),
         'mode': task.mode,
-        'type': json.loads(task.request)["type"],
-        'input': json.loads(task.request),
         'progress': task.progress
     })
     return response
@@ -183,7 +189,7 @@ def get_status(request) -> Response:
 @api_view(['GET'])
 def get_result_file_list(request) -> Response:
     uid = request.GET.get('task')
-    files = list({'name': a.name, 'type': a.type} for a in Attachment.objects.filter(uid=uid))
+    files = list({'name': a.name} for a in Attachment.objects.filter(uid=uid))
     return (Response(files))
 
 
@@ -202,14 +208,15 @@ def get_result_file(request) -> Response:
     return response
 
 
-@api_view(['GET'])
-def get_result(request) -> Response:
-    uid = request.GET.get('task')
-    task = Task.objects.get(uid=uid)
-    if not task.done and not task.failed:
-        refresh_from_redis(task)
-        task.save()
-    return Response({'task': task.uid, 'result': json.loads(task.result), 'parameters': json.loads(task.request)})
+# @api_view(['GET'])
+# def get_result(request) -> Response:
+#     uid = request.GET.get('task')
+#     task = Task.objects.get(uid=uid)
+#     if not task.done and not task.failed:
+#         refresh_from_redis(task)
+#         task.save()
+#     files = [{'name':a.name} for a in Attachment.objects.filter(uid=uid)]
+#     return Response({'task': task.uid, 'files': files})
 
 
 @api_view(['GET'])
@@ -227,25 +234,31 @@ def get_network_file(request) -> Response:
 def download_file(request) -> Response:
     # Define text file name
     # TODO get file by requested name and uid
-    Attachment.get_latest_by()
-    # Define the full file path
-    # filepath = os.path.join('data', filename)
-    # # Open the file for reading content
-    # path = open(filepath, 'r')
+
+    attachment = Attachment.objects.filter(uid=request.GET.get('uid'), name=request.GET.get('filename')).first()
+    # Open the file for reading content
+    file = attachment.path
+
+    if file is not None:
+        response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
+        response['Content-Disposition'] = 'attachment; filename=' + smart_str(attachment.name)
+        response['Content-Length'] = os.path.getsize(file)
+        return response
+    raise Http404
+    # path = open(attachment.path, 'rb')
     # # Set the mime type
-    # mime_type, _ = mimetypes.guess_type(filepath)
+    # mime_type, _ = mimetypes.guess_type(attachment.path)
     # # Set the return value of the HttpResponse
     # response = HttpResponse(path, content_type=mime_type)
     # # Set the HTTP header for sending to browser
-    # response['Content-Disposition'] = "attachment; filename=%s" % filename
-    # Return the response value
+    # response['Content-Disposition'] = "attachment; filename=%s" % attachment.name
+    # #Return the response value
     # return response
-    return Response()
 
 
 def get_uid():
     uid = str(uuid.uuid4())
-    while Task.objects.filter(uid=uid).exists():
+    while Task.objects.filter(uid=uid).exists() or os.path.exists(get_wd(uid)):
         uid = str(uuid.uuid4())
     return uid
 
@@ -255,23 +268,50 @@ def get_wd(uid):
 
 
 def get_file_path(uid, name):
-    return os.path.join(get_wd(uid), uid, name)
+    return os.path.join(get_wd(uid), name)
 
 
 def write_file(uid, file):
     fs = FileSystemStorage(location=get_wd(uid))
-    filename = fs.save(uid, file)
+    fs.save(file.name, file)
     path = get_file_path(uid, file.name)
-    os.system("mv " + os.path.join(get_wd(uid), filename) + " " + path)
     return path
 
 
 def save_file(uid, request: Request):
-    os.mkdir(get_wd(uid))
+    wd = get_wd(uid)
+    if not os.path.exists(wd):
+        os.mkdir(get_wd(uid))
     file = request.FILES.get('file')
     path = write_file(uid, file)
-    print(path)
-    # Attachment.objects.create(uid=uid, input=False, filename=file.name, path=path, created=datetime.now())
+    Attachment.objects.create(uid=uid, name=file.name, path=path, created=datetime.now())
+    return file.name
+
+
+@never_cache
+@api_view(['GET'])
+def init_task(req) -> Response:
+    uid = get_uid()
+    t = Task.objects.create(uid=uid, created_at=datetime.now(), mode=req.GET.get('mode'), directory=get_wd(uid))
+    return Response({'uid': t.uid})
+
+
+@api_view(['GET'])
+def get_input(req) -> Response:
+    uid = req.GET.get('uid')
+    return Response(json.loads(Task.objects.get(uid=uid).parameters))
+
+
+@api_view(['POST'])
+def run_filter(req) -> Response:
+    uid = req.data.get('uid')
+    if 'mail' in req.data:
+        Notification.objects.create(uid=uid, mail=req.data.get('mail'))
+    task = Task.objects.get(uid=uid)
+    task.parameters = json.dumps(req.data)
+    start_task(task)
+    task.save()
+    return Response({'uid': uid})
 
 
 @api_view(['POST'])
@@ -279,10 +319,9 @@ def save_file(uid, request: Request):
 @parser_classes([MultiPartParser])
 def upload_file(req) -> Response:
     if req.method == 'POST':
-        # uid = get_uid()
-        uid = req.FILES.get('uid').name
-        save_file(uid, req)
-        return Response({"id": uid})
+        uid = req.data.get('uid')
+        name = save_file(uid, req)
+        return Response({"id": uid, "filename": name})
     return Response()
 
 
@@ -293,7 +332,6 @@ def get_files(request) -> Response:
     file = file_name
     if not file_name.endswith(".csv") and measure is not None:
         file = os.path.join(measure, file_name)
-    # file = digest_files.getFile(file)
     if file is not None:
         response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
         response['Content-Disposition'] = 'attachment; filename=' + smart_str(file_name)

@@ -1,12 +1,12 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.core.mail import send_mail
-from mesidha_backend.models import Notification, Task
 
 logger = get_task_logger(__name__)
 
 @shared_task
 def check_mails():
+    from database.models import Notification, Task
     to_remove = set()
     uids = set()
     for n in Notification.objects.all():
@@ -21,6 +21,7 @@ def check_mails():
 
 def get_notification_mails(id):
     try:
+        from database.models import Notification, Task
         mails = []
         for n in Notification.objects.filter(uid=id):
             mails.append(n.mail)
@@ -38,6 +39,7 @@ def send_notification(id):
         remove_notification(id)
 
 def remove_notification(id):
+    from database.models import Notification, Task
     for n in Notification.objects.filter(uid=id):
         n.delete()
 

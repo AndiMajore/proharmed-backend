@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 
 
@@ -9,7 +11,6 @@ class Task(models.Model):
     mode = models.CharField(max_length=32, choices=[('filter', 'filter'), ('remap', 'remap'), ('reduce', 'reduce'),
                                                     ('ortho', 'ortho')])
     parameters = models.TextField(null=True)
-    request = models.TextField(null=True)
     started_at = models.DateTimeField(null=True)
     finished_at = models.DateTimeField(null=True)
     worker_id = models.CharField(max_length=128, null=True)
@@ -29,8 +30,8 @@ class Notification(models.Model):
 
 class Attachment(models.Model):
     id = models.AutoField(primary_key=True)
-    created = models.DateTimeField(null=True)
+    created = models.DateTimeField(null=True, default=datetime.datetime.now())
     uid = models.CharField(max_length=36)
-    input = models.BooleanField(default=False)
+    remove = models.BooleanField(default=True)
     name = models.CharField(max_length=128)
     path = models.CharField(max_length=256)

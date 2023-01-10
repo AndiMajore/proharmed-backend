@@ -3,7 +3,6 @@ import uuid
 import os
 
 import pandas as pd
-from mesidha_backend.models import Notification
 
 def prepare_set_file(content, file):
     with open(file, "w") as fh:
@@ -74,6 +73,7 @@ def toJson(data):
     return dump
 
 def prepare_mail(data):
+    from database.models import Notification
     if "mail" in data:
         if "sigCont" in data and data["sigCont"]:
             mail = data["mail"].strip()

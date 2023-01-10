@@ -1,22 +1,23 @@
-version: '3.3'
+version: "3.3"
 
 services:
+  web:
+    image: andimajore/mesidha_frontend:latest
+    container_name: mesidha_frontend
+    ports:
+      - "8041:80"
+    restart: always
   app:
     image: andimajore/mesidha_backend:latest
     container_name: mesidha_backend
-
-    build: .
     env_file:
-      - '../docker-django.env.dev'
+      - 'docker-django.env.dev'
     restart: always
     command:
       - "sh"
       - "/usr/src/mesidha/scripts/start_app.sh"
     ports:
-      - 8041:8000
-    volumes:
-      - mesidha_backend_volume:/usr/src/mesidha/database/migrations
-      - mesidha_data_volume:/tmp
+      - "8042:8000"
     networks:
       - mesidha_net
     depends_on:
@@ -28,8 +29,6 @@ services:
     command: [ "redis-server" ]
     container_name: mesidha_redis
     hostname: mesidha_redis
-    volumes:
-      - mesidha_data_volume:/tmp
     networks:
       - mesidha_net
     depends_on:
@@ -43,9 +42,9 @@ services:
     container_name: mesidha_celery
     hostname: mesidha_celery
     env_file:
-      - '../docker-django.env.dev'
+      - 'docker-django.env.dev'
     volumes:
-      - mesidha_data_volume:/tmp
+      - mesidha_volume:/usr/src/mesidha/mapping_files
     depends_on:
       - redis
       - db
@@ -59,28 +58,17 @@ services:
     container_name: mesidha_celery_beat
     hostname: mesidha_celery_beat
     env_file:
-      - '../docker-django.env.dev'
+      - 'docker-django.env.dev'
     depends_on:
       - redis
       - db
     networks:
       - mesidha_net
-#  flower:
-#    image: mher/flower
-#    container_name: mesidha_flower
-#    env_file:
-#      - '../docker-django.env.dev'
-#    ports:
-#      - 8888:8888
-#    networks:
-#      - mesidha_net
   db:
     image: postgres
     restart: always
     container_name: mesidha_db
     hostname: db
-    ports:
-      - 5432:5432
     networks:
       - mesidha_net
     volumes:
@@ -100,6 +88,5 @@ networks:
   mesidha_net:
 
 volumes:
+  mesidha_volume:
   mesidha_db_volume:
-  mesidha_backend_volume:
-  mesidha_data_volume:
