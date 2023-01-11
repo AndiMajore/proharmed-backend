@@ -177,8 +177,8 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'mesidha_backend.mailer.check_mails',
         'schedule': 30.0,
     },
-    # 'check_removal':{
-    #     'task':'mesidha_backend.cleaner.clean_data',
-    #     'schedule':60.0,
-    # }
+    'check_removal':{
+        'task':'mesidha_backend.cleaner.check_cleaning',
+        'schedule':60.0,
+    }
 }

@@ -11,10 +11,12 @@ class Task(models.Model):
     mode = models.CharField(max_length=32, choices=[('filter', 'filter'), ('remap', 'remap'), ('reduce', 'reduce'),
                                                     ('ortho', 'ortho')])
     parameters = models.TextField(null=True)
+    result = models.CharField(null=True, max_length=256)
     started_at = models.DateTimeField(null=True)
     finished_at = models.DateTimeField(null=True)
     worker_id = models.CharField(max_length=128, null=True)
     job_id = models.CharField(max_length=128, null=True)
+    deleted = models.BooleanField(default=False)
     done = models.BooleanField(default=False)
     failed = models.BooleanField(default=False)
     started = models.BooleanField(default=False)

@@ -7,7 +7,7 @@ import json
 
 from mesidha_backend.task_hook import TaskHook
 from mesidha_backend.mailer import error_notification
-from mesidha_backend.mesidha_executor import run_filter
+from mesidha_backend.mesidha_executor import *
 
 qr_r = redis.Redis(host=os.getenv('REDIS_HOST', 'mesidha_redis'),
                    port=os.getenv('REDIS_PORT', 6379),
@@ -27,11 +27,12 @@ def run_task(uid, mode, parameters, set_files):
     def set_status(status):
         r.set(f'{uid}_status', f'{status}')
 
-    def set_result():
+    def set_result(result_file):
         t = Task.objects.get(uid=uid)
         timestamp = str(datetime.now().timestamp())
         r.set(f'{uid}_finished_at', timestamp)
         r.set(f'{uid}_done', '1')
+        t.result = result_file
         t.finished_at = datetime.fromtimestamp(float(timestamp))
         t.done = True
         t.save()
@@ -52,6 +53,12 @@ def run_task(uid, mode, parameters, set_files):
         pass
         if mode == 'filter':
             run_filter(task_hook)
+        if mode == 'remap':
+            run_remap(task_hook)
+        if mode == 'reduce':
+            run_reduce(task_hook)
+        if mode == 'ortho':
+            run_ortho(task_hook)
 
     except Exception as e:
         print("Error in MeSIdHa execution:")
@@ -94,7 +101,7 @@ def save_files_to_db(files, uid):
 
 
 def start_task(task):
-    job = rq_tasks.enqueue(run_task, task.uid, task.mode, json.loads(task.parameters), save_files_to_db, job_timeout=60 * 60)
+    job = rq_tasks.enqueue(run_task, task.uid, task.mode, json.loads(task.parameters), save_files_to_db, job_timeout=60 * 10)
     task.job_id = job.id
     task.started = True
     task.status = "Queued"

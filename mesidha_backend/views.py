@@ -20,148 +20,36 @@ from rest_framework.parsers import MultiPartParser
 from mesidha_backend import preparation
 from django.views.decorators.cache import never_cache
 from database.models import Task, Attachment, Notification
+from mesidha_backend.cleaner import clean_data
 from mesidha_backend.task import start_task, refresh_from_redis, task_stats
-from mesidha_backend.versions import get_version
-
-
-def run(mode, data, params) -> Response:
-    version = get_version()
-    id = checkExistence(params, version, mode)
-    if id is not None:
-        try:
-            n = Notification.objects.filter(uid=data["uid"]).first()
-            n.uid = id
-            n.save()
-        except Exception:
-            pass
-        return Response({'task': id})
-    sc = False
-    if 'sigCont' in data and data["sigCont"]:
-        sc = True
-    if sc and len(data["target"]) > 100 and ('sigContTarget' not in data or len(data["sigContTarget"]) > 100):
-        return Response({"task": None, "error": True, "reason": "Significance contribution calculation can only be "
-                                                                "carried out for maximum 100 entries."})
-    task = Task.objects.create(uid=data["uid"], mode=mode, parameters=data, request=params, version=version, sc=sc)
-    start_task(task)
-    task.save()
-    return Response({'task': data["uid"]})
 
 
 @api_view(['GET'])
-def run_examples(request) -> Response:
-    return Response()
+def clear(request) -> Response:
+    uid = request.GET.get('uid')
+    clean_data(uid)
+    return Response({'uid': uid})
 
 
-def checkExistence(params, version, mode):
-    try:
-        entry = Task.objects.filter(request=params, mode=mode, failed=False, version=version).last()
-        return entry.uid
-    except:
-        return None
-
-
-@never_cache
-@api_view(['GET'])
-def get_sc_status(request) -> Response:
-    uid = request.GET.get('task')
-    task = Task.objects.get(uid=uid)
-    status = json.loads(task.sc_status)
-    response = Response({"task": uid, "done": task.sc_done, "status": status})
-    return response
-
-
-@api_view(['GET'])
-def get_sc_top_results(request) -> Response:
-    uid = request.GET.get('task')
-    results = json.loads(Task.objects.get(uid=uid).sc_top_results)
-    return Response(results)
-
-
-@api_view(['GET'])
-def get_sc_results(request) -> Response:
-    uid = request.GET.get('task')
-    task = Task.objects.get(uid=uid)
-    response = Response(json.loads(task.sc_result))
-    return response
-
-
-@api_view(['POST'])
-def set(request) -> Response:
-    data = request.data
-    params = preparation.prepare_set(data)
-    return run("set", data, params)
-
-
-def run_set(data):
-    params = preparation.prepare_set(data)
-    return run("set", data, params)
-
-
-@api_view(['POST'])
-def subnetwork(request) -> Response:
-    data = request.data
-    params = preparation.prepare_subnetwork(data)
-    return run("subnetwork", data, params)
-
-
-def run_subnetwork(data):
-    params = preparation.prepare_subnetwork(data)
-    return run("subnetwork", data, params)
-
-
-@api_view(['POST'])
-def subnetwork_set(request) -> Response:
-    data = request.data
-    params = preparation.prepare_subnetwork_set(data)
-    return run("subnetwork", data, params)
-
-
-def run_subnetwork_set(data):
-    params = preparation.prepare_subnetwork_set(data)
-    return run("subnetwork", data, params)
-
-
-@api_view(['POST'])
-def cluster(request) -> Response:
-    data = request.data
-    params = preparation.prepare_cluster(data)
-    return run("cluster", data, params)
-
-
-def run_cluster(data):
-    params = preparation.prepare_cluster(data)
-    return run("cluster", data, params)
-
-
-@api_view(['POST'])
-def set_set(request) -> Response:
-    data = request.data
-    params = preparation.prepare_set_set(data)
-    return run("set-set", data, params)
-
-
-def run_set_set(data):
-    params = preparation.prepare_set_set(data)
-    return run("set-set", data, params)
-
-
-@api_view(['POST'])
-def id_set(request) -> Response:
-    data = request.data
-    params = preparation.prepare_id_set(data)
-    return run("id-set", data, params)
-
-
-def run_id_set(data):
-    params = preparation.prepare_id_set(data)
-    return run("id-set", data, params)
+def get_delimiter(file: str):
+    if file.endswith('csv'):
+        return ','
+    if file.endswith('tsv'):
+        return '\t'
+    import csv
+    sniffer = csv.Sniffer()
+    with open(file, 'r') as fh:
+        for line in fh.readlines():
+            return sniffer.sniff(line).delimiter
+    return ","
 
 
 @api_view(['GET'])
 def get_preview(request) -> Response:
     uid = request.GET.get('uid')
     name = request.GET.get('filename')
-    df = pd.read_csv(os.path.join(get_wd(uid), name))
+    file = os.path.join(get_wd(uid), name)
+    df = pd.read_csv(file, sep=get_delimiter(file))
     return Response(df.head(5).to_json())
 
 
@@ -175,9 +63,11 @@ def get_status(request) -> Response:
         task.save()
     response = Response({
         'task': task.uid,
+        'output': task.result,
         'failed': task.failed,
         'done': task.done,
         'status': task.status,
+        'deleted': task.deleted,
         'stats': task_stats(task),
         'mode': task.mode,
         'progress': task.progress
@@ -208,33 +98,8 @@ def get_result_file(request) -> Response:
     return response
 
 
-# @api_view(['GET'])
-# def get_result(request) -> Response:
-#     uid = request.GET.get('task')
-#     task = Task.objects.get(uid=uid)
-#     if not task.done and not task.failed:
-#         refresh_from_redis(task)
-#         task.save()
-#     files = [{'name':a.name} for a in Attachment.objects.filter(uid=uid)]
-#     return Response({'task': task.uid, 'files': files})
-
-
-@api_view(['GET'])
-def get_network_file(request) -> Response:
-    file = "/usr/src/mesidha/example_files/gene_network.graphml"
-    if file is not None:
-        response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
-        response['Content-Disposition'] = 'attachment; filename=' + smart_str("gene_network.graphml")
-        response['Content-Length'] = os.path.getsize(file)
-        return response
-    raise Http404
-
-
 @api_view(['GET'])
 def download_file(request) -> Response:
-    # Define text file name
-    # TODO get file by requested name and uid
-
     attachment = Attachment.objects.filter(uid=request.GET.get('uid'), name=request.GET.get('filename')).first()
     # Open the file for reading content
     file = attachment.path
@@ -245,15 +110,6 @@ def download_file(request) -> Response:
         response['Content-Length'] = os.path.getsize(file)
         return response
     raise Http404
-    # path = open(attachment.path, 'rb')
-    # # Set the mime type
-    # mime_type, _ = mimetypes.guess_type(attachment.path)
-    # # Set the return value of the HttpResponse
-    # response = HttpResponse(path, content_type=mime_type)
-    # # Set the HTTP header for sending to browser
-    # response['Content-Disposition'] = "attachment; filename=%s" % attachment.name
-    # #Return the response value
-    # return response
 
 
 def get_uid():
@@ -303,10 +159,12 @@ def get_input(req) -> Response:
 
 
 @api_view(['POST'])
-def run_filter(req) -> Response:
+def run(req) -> Response:
     uid = req.data.get('uid')
     if 'mail' in req.data:
-        Notification.objects.create(uid=uid, mail=req.data.get('mail'))
+        mail = req.data.get('mail')
+        Notification.objects.create(uid=uid, mail=mail)
+        del req.data['mail']
     task = Task.objects.get(uid=uid)
     task.parameters = json.dumps(req.data)
     start_task(task)
@@ -323,18 +181,3 @@ def upload_file(req) -> Response:
         name = save_file(uid, req)
         return Response({"id": uid, "filename": name})
     return Response()
-
-
-@api_view(['GET'])
-def get_files(request) -> Response:
-    file_name = request.GET.get('name')
-    measure = request.GET.get('measure')
-    file = file_name
-    if not file_name.endswith(".csv") and measure is not None:
-        file = os.path.join(measure, file_name)
-    if file is not None:
-        response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
-        response['Content-Disposition'] = 'attachment; filename=' + smart_str(file_name)
-        response['Content-Length'] = os.path.getsize(file)
-        return response
-    raise Http404
