@@ -36,11 +36,12 @@ def check_cleaning():
     for t in Task.objects.all():
         now = datetime.datetime.now(datetime.timezone.utc)
         if t.finished_at is None:
-            if t.started_at is not None:
-                diff = now - t.started_at
-                hrs = diff.total_seconds() / 60 / 60
-                if hrs < 1:
-                    continue
+            diff = now - t.created_at
+            hrs = diff.total_seconds() / 60 / 60
+            print(f"{now} - {t.created_at}")
+            print(hrs)
+            if hrs < 1:
+                continue
             clean_data(t.uid)
             print(f"Removed unfinished task {t.uid}")
             t.delete()

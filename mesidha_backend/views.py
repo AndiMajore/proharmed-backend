@@ -53,6 +53,16 @@ def get_preview(request) -> Response:
     return Response(df.head(5).to_json())
 
 
+@api_view(['POST'])
+def get_result_column(request) -> Response:
+    uid = request.data.get('uid')
+    name = request.data.get('filename')
+    column = request.data.get('column')
+    file = os.path.join(get_wd(uid), name)
+    df = pd.read_csv(file, sep=get_delimiter(file))
+    return Response(list(set(df[column].fillna('').tolist())))
+
+
 @never_cache
 @api_view(['GET'])
 def get_status(request) -> Response:

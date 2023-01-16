@@ -95,7 +95,7 @@ def run_filter(hook: TaskHook):
     R_filtered_df, R_log_dict = fi.filter_protein_ids(data=df, protein_column=data.get('column'),
                                                       organism=data.get('organism'), rev_con=data.get('revCon'),
                                                       keep_empty=data.get('keep'), reviewed=data.get('reviewed'),
-                                                      res_column=data.get('res_column'))
+                                                      res_column=data.get('resultColumn'))
     hook.set_progress(0.5, "Writing files")
 
     R_filtered_df.to_csv(os.path.join(wd, out_name), index=False, sep=sep)
@@ -129,7 +129,7 @@ def run_remap(hook: TaskHook):
     R_remapped_df, R_log_dict = rmg.remap_genenames(data=df, mode=data.get('mode'), protein_column=data.get('p_column'),
                                                     gene_column=data.get('g_column'), skip_filled=data.get('skip'),
                                                     organism=data.get('organism'), keep_empty=data.get('keep'),
-                                                    res_column=data.get('res_column'), fasta=fasta)
+                                                    res_column=data.get('resultColumn'), fasta=fasta)
     hook.set_progress(0.5, "Writing files")
     R_remapped_df.to_csv(os.path.join(wd, out_name), index=False, sep=sep)
     R_log_dict['Overview_Log'].to_csv(os.path.join(wd, 'overview_log.txt'))
@@ -156,7 +156,7 @@ def run_reduce(hook: TaskHook):
     hook.set_progress(0.2, "Executing")
     R_remapped_df, R_log_dict = rdg.reduce_genenames(data=df, mode=data.get('mode'), gene_column=data.get('g_column'),
                                                      organism=data.get('organism'), keep_empty=data.get('keep'),
-                                                     res_column=data.get('res_column'))
+                                                     res_column=data.get('resultColumn'))
     hook.set_progress(0.5, "Writing files")
     R_remapped_df.to_csv(os.path.join(wd, out_name), index=False, sep=sep)
     R_log_dict['Overview_Log'].to_csv(os.path.join(wd, 'overview_log.txt'))
@@ -187,7 +187,7 @@ def run_ortho(hook: TaskHook):
 
     R_remapped_df, R_log_dict = mo.map_orthologs(data=df, gene_column=data.get('g_column'),
                                                  organism=data.get('organism'), keep_empty=data.get('keep'),
-                                                 res_column=data.get('res_column'), tar_organism=data.get('t_organism'))
+                                                 res_column=data.get('resultColumn'), tar_organism=data.get('t_organism'))
     hook.set_progress(0.5, "Writing files")
     R_remapped_df.to_csv(os.path.join(wd, out_name), index=False, sep=sep)
     R_log_dict['Overview_Log'].to_csv(os.path.join(wd, 'overview_log.txt'))
@@ -202,76 +202,3 @@ def run_ortho(hook: TaskHook):
     hook.set_results(out_name)
 
 
-def run_subnetwork(hook: TaskHook):
-    data = hook.parameters
-    hook.set_progress(0.1, "Executing")
-    network = None
-    if 'network_data' in data:
-        network = data['network_data']
-    result = validate(tar=data["target"], tar_id=data["target_id"], mode="subnetwork",
-                      runs=data["runs"],
-                      replace=data["replace"], ref=None, ref_id=None, enriched=None,
-                      background_model=data["background_model"], background_network=network,
-                      distance=data["distance"], out_dir=data["out"],
-                      uid=data["uid"], set_progress=hook.set_progress)
-    hook.set_files(files=result["files"], uid=data["uid"])
-    hook.set_results(results=result["result"])
-
-
-def run_subnetwork_set(hook: TaskHook):
-    data = hook.parameters
-    hook.set_progress(0.1, "Executing")
-    network = None
-    if 'network_data' in data:
-        network = data['network_data']
-    result = validate(tar=data["target"], tar_id=data["target_id"], mode="subnetwork_set",
-                      runs=data["runs"],
-                      replace=data["replace"], ref=data["reference"], ref_id=data["reference_id"],
-                      enriched=data["enriched"],
-                      background_model=data["background_model"], background_network=network,
-                      distance=data["distance"], out_dir=data["out"],
-                      uid=data["uid"], set_progress=hook.set_progress)
-    hook.set_files(files=result["files"], uid=data["uid"])
-    hook.set_results(results=result["result"])
-
-
-def run_cluster(hook: TaskHook):
-    data = hook.parameters
-    hook.set_progress(0.1, "Executing")
-    result = validate(tar=data["target"], tar_id=data["target_id"], mode="clustering",
-                      runs=data["runs"],
-                      replace=data["replace"], ref=None, ref_id=None, enriched=None,
-                      background_model=data["background_model"],
-                      background_network=None,
-                      distance=data["distance"], out_dir=data["out"], uid=data["uid"], set_progress=hook.set_progress)
-    hook.set_files(files=result["files"], uid=data["uid"])
-    hook.set_results(results=result["result"])
-
-
-def run_set_set(hook: TaskHook):
-    data = hook.parameters
-    hook.set_progress(0.1, "Executing")
-    result = validate(tar=data["target"], tar_id=data["target_id"], ref_id=data["reference_id"],
-                      ref=data["reference"], mode="set-set", runs=data["runs"],
-                      replace=data["replace"], enriched=data["enriched"], background_model=data["background_model"],
-                      background_network=None,
-                      distance=data["distance"], out_dir=data["out"], uid=data["uid"], set_progress=hook.set_progress)
-    hook.set_files(files=result["files"], uid=data["uid"])
-    hook.set_results(results=result["result"])
-
-
-def run_id_set(hook: TaskHook):
-    data = hook.parameters
-    hook.set_progress(0.1, "Executing")
-    result = validate(tar=data["target"], tar_id=data["target_id"], ref_id=data["reference_id"],
-                      ref=data["reference"], mode="id-set", runs=data["runs"],
-                      replace=data["replace"], enriched=data["enriched"], background_model=data["background_model"],
-                      background_network=None,
-                      distance=data["distance"], out_dir=data["out"], uid=data["uid"], set_progress=hook.set_progress)
-    hook.set_files(files=result["files"], uid=data["uid"])
-    hook.set_results(results=result["result"])
-# def init(self):
-
-# ru.print_current_usage('Load mappings for input into cache ...')
-# mapper = FileMapper()
-# mapper.load_mappings()

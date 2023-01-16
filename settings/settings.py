@@ -122,11 +122,11 @@ TIME_ZONE = 'Europe/Berlin'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-CORS_ORIGIN_ALLOW_ALL = DEBUG
+CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOWED_ORIGIN = [
     "http://localhost:8080",
-    "mesidha.zbh.uni-hamburg.de"
+    "https://mesidha.zbh.uni-hamburg.de"
 ]
 
 REST_FRAMEWORK = {
