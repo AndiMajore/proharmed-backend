@@ -32,6 +32,7 @@ urlpatterns = [
     path('run_remap', run),
     path('run_reduce', run),
     path('run_ortho', run),
+    path('run_intersect', run),
     path('clear', clear),
     path('get_result_column', get_result_column),
     path('save_network', save_network),

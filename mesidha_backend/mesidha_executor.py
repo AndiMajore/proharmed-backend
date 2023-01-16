@@ -6,6 +6,10 @@ from mqhandler.mq_utils.plotting import *
 from mqhandler import remap_genenames as rmg
 from mqhandler import map_orthologs as mo
 from mqhandler import reduce_genenames as rdg
+from mqhandler import intersection_analysis as ia
+
+
+
 
 from mesidha_backend.versions import save_version, get_version
 from mesidha_backend.task_hook import TaskHook
@@ -80,6 +84,32 @@ def get_output_file_name(filename, suffix, type):
     return filename
 
 
+def run_intersect(hook: TaskHook):
+    from mesidha_backend.views import get_wd
+    hook.set_progress(0.1, "Preparing")
+    data = hook.parameters
+    wd = get_wd(data.get('uid'))
+    dfs = list()
+    columns = data.get('columns')
+    out_name = f'intersection_{data.get("uid")}.tsv'
+    for f in data.get('filenames'):
+        file = f.split('.')
+        type = f[len(file) - 1]
+        sep = get_delimiter(os.path.join(wd, f), type)
+        dfs.append(pd.read_csv(os.path.join(wd, f), sep=sep))
+    hook.set_progress(0.15, "Reading data")
+    r = ia.load_multi_files(dfs, columns)
+    hook.set_progress(0.2, "Executing")
+    result = ia.count_intersection(data=r, threshold=int(data.get('threshold')))
+    hook.set_progress(0.5, "Writing files")
+    result.to_csv(os.path.join(wd, out_name), index=False, sep='\t')
+    hook.set_progress(0.7, "Plotting")
+    ia.plot_intersections(data= r, out_dir=wd, file_type = "png")
+    hook.set_progress(0.9, "Collecting results")
+    hook.set_files(files=getFiles(uid=data.get('uid'), skip=[]), uid=data.get("uid"))
+    hook.set_results(out_name)
+
+
 def run_filter(hook: TaskHook):
     from mesidha_backend.views import get_wd
     hook.set_progress(0.1, "Preparing")
@@ -108,7 +138,7 @@ def run_filter(hook: TaskHook):
                                 organism=data.get('organism'), reviewed=data.get('reviewed'), decoy=data.get('revCon'),
                                 out_dir=get_wd(data.get('uid')), file_type="png")
     hook.set_progress(0.9, "Collecting results")
-    hook.set_files(files=getFiles(data.get('uid'), skip=[data.get('filename')]), uid=data["uid"])
+    hook.set_files(files=getFiles(uid=data.get('uid'), skip=[data.get('filename')]), uid=data["uid"])
     hook.set_results(out_name)
 
 
@@ -187,7 +217,8 @@ def run_ortho(hook: TaskHook):
 
     R_remapped_df, R_log_dict = mo.map_orthologs(data=df, gene_column=data.get('g_column'),
                                                  organism=data.get('organism'), keep_empty=data.get('keep'),
-                                                 res_column=data.get('resultColumn'), tar_organism=data.get('t_organism'))
+                                                 res_column=data.get('resultColumn'),
+                                                 tar_organism=data.get('t_organism'))
     hook.set_progress(0.5, "Writing files")
     R_remapped_df.to_csv(os.path.join(wd, out_name), index=False, sep=sep)
     R_log_dict['Overview_Log'].to_csv(os.path.join(wd, 'overview_log.txt'))
@@ -195,10 +226,9 @@ def run_ortho(hook: TaskHook):
     hook.set_progress(0.7, "Plotting")
 
     create_overview_plot(logging=R_log_dict["Overview_Log"], out_dir=wd, file_type="png")
-    create_ortholog_detailed_plot(logging=R_log_dict["Detailed_Log"], out_dir=get_wd(data.get('uid')), file_type="png", organism=data.get('organism'))
+    create_ortholog_detailed_plot(logging=R_log_dict["Detailed_Log"], out_dir=get_wd(data.get('uid')), file_type="png",
+                                  organism=data.get('organism'))
 
     hook.set_progress(0.9, "Collecting results")
     hook.set_files(files=getFiles(data.get('uid'), skip=[data.get('filename')]), uid=data["uid"])
     hook.set_results(out_name)
-
-

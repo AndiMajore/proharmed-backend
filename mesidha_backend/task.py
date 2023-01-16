@@ -59,6 +59,8 @@ def run_task(uid, mode, parameters, set_files):
             run_reduce(task_hook)
         if mode == 'ortho':
             run_ortho(task_hook)
+        if mode == 'intersect':
+            run_intersect(task_hook)
 
     except Exception as e:
         print("Error in MeSIdHa execution:")

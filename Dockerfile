@@ -17,7 +17,7 @@ RUN pip install psycopg2-binary
 COPY ./requirements.txt /usr/src/mesidha/requirements.txt
 RUN pip install -r /usr/src/mesidha/requirements.txt
 
-RUN pip install mqhandler==0.0.22
+RUN pip install mqhandler==0.0.24
 COPY . /usr/src/mesidha/
 
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
