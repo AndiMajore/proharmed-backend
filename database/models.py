@@ -9,7 +9,7 @@ class Task(models.Model):
     directory = models.CharField(max_length=256)
 
     mode = models.CharField(max_length=32, choices=[('filter', 'filter'), ('remap', 'remap'), ('reduce', 'reduce'),
-                                                    ('ortho', 'ortho')])
+                                                    ('ortho', 'ortho'), ('network', 'network')])
     parameters = models.TextField(null=True)
     result = models.CharField(null=True, max_length=256)
     started_at = models.DateTimeField(null=True)

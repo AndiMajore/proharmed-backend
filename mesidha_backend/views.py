@@ -183,6 +183,18 @@ def run(req) -> Response:
 
 
 @api_view(['POST'])
+def save_network(req) -> Response:
+    uid = req.data.get('uid')
+    task = Task.objects.get(uid=uid)
+    task.parameters = json.dumps(req.data)
+    task.started_at = datetime.now()
+    task.finished_at = datetime.now()
+    task.done = True
+    task.save()
+    return Response({'uid': uid})
+
+
+@api_view(['POST'])
 @csrf_exempt
 @parser_classes([MultiPartParser])
 def upload_file(req) -> Response:

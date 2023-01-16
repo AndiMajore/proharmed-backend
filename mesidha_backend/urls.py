@@ -33,7 +33,8 @@ urlpatterns = [
     path('run_reduce', run),
     path('run_ortho', run),
     path('clear', clear),
-    path('get_result_column', get_result_column)
+    path('get_result_column', get_result_column),
+    path('save_network', save_network),
     # path('update',run_update),
     # path('sig_cont', run_sig_cont)
 ]
