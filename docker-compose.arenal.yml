@@ -7,6 +7,9 @@ services:
     ports:
       - "8111:80"
     restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
   app:
     image: andimajore/proharmed_backend:latest
     container_name: proharmed_backend
@@ -20,6 +23,8 @@ services:
       - "8112:8000"
     networks:
       - proharmed_net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
       - db
       - redis
@@ -50,6 +55,8 @@ services:
       - db
     networks:
       - proharmed_net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
   celery-beat:
     command:
       - "sh"
@@ -64,6 +71,8 @@ services:
       - db
     networks:
       - proharmed_net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
   db:
     image: postgres
     restart: always
