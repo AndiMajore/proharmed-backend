@@ -5,17 +5,17 @@ import rq
 import os
 import json
 
-from mesidha_backend.task_hook import TaskHook
-from mesidha_backend.mailer import error_notification
-from mesidha_backend.mesidha_executor import *
+from proharmed_backend.task_hook import TaskHook
+from proharmed_backend.mailer import error_notification
+from proharmed_backend.proharmed_executor import *
 
-qr_r = redis.Redis(host=os.getenv('REDIS_HOST', 'mesidha_redis'),
+qr_r = redis.Redis(host=os.getenv('REDIS_HOST', 'proharmed_redis'),
                    port=os.getenv('REDIS_PORT', 6379),
                    db=0,
                    decode_responses=False)
-rq_tasks = rq.Queue('mesidha_tasks', connection=qr_r)
+rq_tasks = rq.Queue('proharmed_tasks', connection=qr_r)
 
-r = redis.Redis(host=os.getenv('REDIS_HOST', 'mesidha_redis'),
+r = redis.Redis(host=os.getenv('REDIS_HOST', 'proharmed_redis'),
                 port=os.getenv('REDIS_PORT', 6379),
                 db=0,
                 decode_responses=True)
@@ -63,8 +63,8 @@ def run_task(uid, mode, parameters, set_files):
             run_intersect(task_hook)
 
     except Exception as e:
-        print("Error in MeSIdHa execution:")
-        error_notification(f"Error in MeSIdHa execution for {uid}.\nError indicator: {e}")
+        print("Error in ProHarMeD execution:")
+        error_notification(f"Error in ProHarMeD execution for {uid}.\nError indicator: {e}")
         r.set(f'{uid}_failed', '1')
         import traceback
         traceback.print_exc()
@@ -96,7 +96,7 @@ def refresh_from_redis(task):
 
 def save_files_to_db(files, uid):
     from database.models import Attachment
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     for (type, entries) in files.items():
         for (name, file) in entries.items():
             Attachment.objects.create(uid=uid, name=name, path=os.path.join(get_wd(uid),name))

@@ -1,5 +1,5 @@
 FROM andimajore/miniconda3_kinetic
-WORKDIR /usr/src/mesidha/
+WORKDIR /usr/src/proharmed/
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -14,11 +14,11 @@ RUN apt-get install wget
 RUN conda install conda python=3.8
 
 RUN pip install psycopg2-binary
-COPY ./requirements.txt /usr/src/mesidha/requirements.txt
-RUN pip install -r /usr/src/mesidha/requirements.txt
+COPY ./requirements.txt /usr/src/proharmed/requirements.txt
+RUN pip install -r /usr/src/proharmed/requirements.txt
 
 RUN pip install mqhandler==0.0.24
-COPY . /usr/src/mesidha/
+COPY . /usr/src/proharmed/
 
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

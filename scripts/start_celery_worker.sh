@@ -1,1 +1,1 @@
-celery -A mesidha_backend worker -l INFO
+celery -A proharmed_backend worker -l INFO

@@ -1,6 +1,6 @@
-# MeSIdHa-web Backend service
+# ProHarMeD-web Backend service
 
-Django based backend service for the MeSIdHa web-app.
+Django based backend service for the ProHarMeD web-app.
 
 ## Setup
 

@@ -1,22 +1,23 @@
-version: '3.3'
+version: "3.3"
 
 services:
+  web:
+    image: andimajore/proharmed_frontend:latest
+    container_name: proharmed_frontend
+    ports:
+      - "8111:80"
+    restart: always
   app:
     image: andimajore/proharmed_backend:latest
     container_name: proharmed_backend
-
-    build: .
     env_file:
-      - '../docker-django.env.dev'
+      - 'docker-django.env.dev'
     restart: always
     command:
       - "sh"
       - "/usr/src/proharmed/scripts/start_app.sh"
     ports:
-      - 8041:8000
-    volumes:
-      - proharmed_backend_volume:/usr/src/proharmed/database/migrations
-      - proharmed_data_volume:/tmp
+      - "8112:8000"
     networks:
       - proharmed_net
     depends_on:
@@ -28,8 +29,6 @@ services:
     command: [ "redis-server" ]
     container_name: proharmed_redis
     hostname: proharmed_redis
-    volumes:
-      - proharmed_data_volume:/tmp
     networks:
       - proharmed_net
     depends_on:
@@ -43,9 +42,9 @@ services:
     container_name: proharmed_celery
     hostname: proharmed_celery
     env_file:
-      - '../docker-django.env.dev'
+      - 'docker-django.env.dev'
     volumes:
-      - proharmed_data_volume:/tmp
+      - proharmed_volume:/usr/src/proharmed/mapping_files
     depends_on:
       - redis
       - db
@@ -59,28 +58,17 @@ services:
     container_name: proharmed_celery_beat
     hostname: proharmed_celery_beat
     env_file:
-      - '../docker-django.env.dev'
+      - 'docker-django.env.dev'
     depends_on:
       - redis
       - db
     networks:
       - proharmed_net
-#  flower:
-#    image: mher/flower
-#    container_name: proharmed_flower
-#    env_file:
-#      - '../docker-django.env.dev'
-#    ports:
-#      - 8888:8888
-#    networks:
-#      - proharmed_net
   db:
     image: postgres
     restart: always
     container_name: proharmed_db
     hostname: db
-    ports:
-      - 5432:5432
     networks:
       - proharmed_net
     volumes:
@@ -100,6 +88,5 @@ networks:
   proharmed_net:
 
 volumes:
+  proharmed_volume:
   proharmed_db_volume:
-  proharmed_backend_volume:
-  proharmed_data_volume:

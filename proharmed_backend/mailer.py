@@ -35,7 +35,7 @@ def send_notification(id):
     mails = get_notification_mails(id)
     if mails is not None:
         link = "https://mesidha.zbh.uni-hamburg.de/result?id=" + id
-        send_mail('Your MeSIdHa job has finished',
+        send_mail('Your ProHarMeD job has finished',
                   f'The harmonization of your data was finished.\nCheck them out here: {link}\n\nResult and input data will be automatically removed within 24h or by earlier on the result page!',
                   'tools-cosybio.zbh@uni-hamburg.de', mails, fail_silently=True)
         remove_notification(id)
@@ -48,10 +48,10 @@ def remove_notification(id):
 
 
 def error_notification(message):
-    send_mail('Error in mesidha-execution', f'Message: {message}', 'tools-cosybio.zbh@uni-hamburg.de',
+    send_mail('Error in ProHarMeD-execution', f'Message: {message}', 'tools-cosybio.zbh@uni-hamburg.de',
               ['status@andimajore.de'], True)
 
 
 def server_startup():
-    send_mail('MeSIdHa system startup', f'The MeSIdHa-validation backend is now ready!',
+    send_mail('ProHarMeD system startup', f'The ProHarMeD-validation backend is now ready!',
               'tools-cosybio.zbh@uni-hamburg.de', ['status@andimajore.de'], fail_silently=False)

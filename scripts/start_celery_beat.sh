@@ -1,1 +1,1 @@
-celery -A mesidha_backend beat -l INFO
+celery -A proharmed_backend beat -l INFO

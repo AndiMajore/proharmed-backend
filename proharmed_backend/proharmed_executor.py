@@ -11,36 +11,13 @@ from mqhandler import intersection_analysis as ia
 
 
 
-from mesidha_backend.versions import save_version, get_version
-from mesidha_backend.task_hook import TaskHook
-
-
-def precompute_examples():
-    version = get_version()
-    if version is None:
-        save_version()
-    # from mesidha_backend.updater import run_examples
-    # run_examples()
-
-
-def validate(tar, tar_id, mode, ref, ref_id, enriched, runs, background_model, background_network, replace, distance,
-             out_dir, uid,
-             set_progress):
-    if enriched is None:
-        enriched = False
-    if runs is None:
-        runs = 1000
-    if background_model is None:
-        background_model = "complete"
-    if replace is None:
-        replace = 100
-    return {}
+from proharmed_backend.task_hook import TaskHook
 
 
 def getFiles(uid, skip):
     dict = {'csv': {}, 'png': {}, 'txt': {}, 'zip': {}, 'other': {}}
     zip_name = uid + '.zip'
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     wd = get_wd(uid)
     zip_path = os.path.join(wd, zip_name)
     zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
@@ -85,7 +62,7 @@ def get_output_file_name(filename, suffix, type):
 
 
 def run_intersect(hook: TaskHook):
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     hook.set_progress(0.1, "Preparing")
     data = hook.parameters
     wd = get_wd(data.get('uid'))
@@ -111,7 +88,7 @@ def run_intersect(hook: TaskHook):
 
 
 def run_filter(hook: TaskHook):
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     hook.set_progress(0.1, "Preparing")
     data = hook.parameters
     wd = get_wd(data.get('uid'))
@@ -143,7 +120,7 @@ def run_filter(hook: TaskHook):
 
 
 def run_remap(hook: TaskHook):
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     hook.set_progress(0.1, "Preparing")
     data = hook.parameters
     wd = get_wd(data.get('uid'))
@@ -172,7 +149,7 @@ def run_remap(hook: TaskHook):
 
 
 def run_reduce(hook: TaskHook):
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     hook.set_progress(0.1, "Preparing")
     data = hook.parameters
     wd = get_wd(data.get('uid'))
@@ -202,7 +179,7 @@ def run_reduce(hook: TaskHook):
 
 
 def run_ortho(hook: TaskHook):
-    from mesidha_backend.views import get_wd
+    from proharmed_backend.views import get_wd
     hook.set_progress(0.1, "Preparing")
     data = hook.parameters
     wd = get_wd(data.get('uid'))

@@ -1,5 +1,5 @@
 from django.core.management import BaseCommand
-from mesidha_backend.mailer import server_startup
+from proharmed_backend.mailer import server_startup
 
 
 class Command(BaseCommand):

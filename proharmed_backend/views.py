@@ -17,11 +17,11 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser
 
-from mesidha_backend import preparation
+from proharmed_backend import preparation
 from django.views.decorators.cache import never_cache
 from database.models import Task, Attachment, Notification
-from mesidha_backend.cleaner import clean_data
-from mesidha_backend.task import start_task, refresh_from_redis, task_stats
+from proharmed_backend.cleaner import clean_data
+from proharmed_backend.task import start_task, refresh_from_redis, task_stats
 
 
 @api_view(['GET'])
