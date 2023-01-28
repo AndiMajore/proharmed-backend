@@ -17,7 +17,7 @@ RUN pip install psycopg2-binary
 COPY ./requirements.txt /usr/src/proharmed/requirements.txt
 RUN pip install -r /usr/src/proharmed/requirements.txt
 
-RUN pip install mqhandler==0.0.24
+RUN pip install mqhandler==0.0.29
 COPY . /usr/src/proharmed/
 
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf

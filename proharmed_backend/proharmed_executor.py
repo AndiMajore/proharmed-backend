@@ -112,7 +112,7 @@ def run_filter(hook: TaskHook):
     create_overview_plot(logging=R_log_dict["Overview_Log"], out_dir=wd, file_type="png")
 
     create_filter_detailed_plot(logging=R_log_dict["Detailed_Log"],
-                                organism=data.get('organism'), reviewed=data.get('reviewed'), decoy=data.get('revCon'),
+                                organism=data.get('organism'),
                                 out_dir=get_wd(data.get('uid')), file_type="png")
     hook.set_progress(0.9, "Collecting results")
     hook.set_files(files=getFiles(uid=data.get('uid'), skip=[data.get('filename')]), uid=data["uid"])
