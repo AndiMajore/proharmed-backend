@@ -43,6 +43,8 @@ def getFiles(uid, skip):
 def get_delimiter(file, type):
     if type == 'tsv':
         return '\t'
+    if type == 'csv':
+        return ','
     import csv
     sniffer = csv.Sniffer()
     with open(file, 'r') as fh:
@@ -94,7 +96,6 @@ def run_filter(hook: TaskHook):
     type = file[len(file) - 1]
     out_name = get_output_file_name(data.get('filename'), "filtered", type)
     sep = get_delimiter(os.path.join(wd, data.get('filename')), type)
-    print(f"Separator='{sep}'")
     hook.set_progress(0.15, "Reading data")
     df = pd.read_csv(os.path.join(wd, data.get('filename')), sep=sep)
     hook.set_progress(0.2, "Executing")

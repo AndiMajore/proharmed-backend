@@ -34,12 +34,25 @@ def clear(request) -> Response:
 def get_delimiter(file: str):
     if file.endswith('tsv'):
         return '\t'
+    if file.endswith('csv'):
+        return ','
     import csv
     sniffer = csv.Sniffer()
     with open(file, 'r') as fh:
         for line in fh.readlines():
             return sniffer.sniff(line).delimiter
     return ","
+
+@api_view(['GET'])
+def download_example_file(request) -> Response:
+    filename = request.GET.get('filename')
+    file = os.path.join("/usr/src/proharmed/examples",filename)
+    if file is not None:
+        response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
+        response['Content-Disposition'] = 'attachment; filename=' + smart_str(filename)
+        response['Content-Length'] = os.path.getsize(file)
+        return response
+    raise Http404
 
 
 @api_view(['GET'])
