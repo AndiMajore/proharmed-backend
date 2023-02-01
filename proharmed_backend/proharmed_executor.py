@@ -41,8 +41,6 @@ def getFiles(uid, skip):
 
 
 def get_delimiter(file, type):
-    if type == 'csv':
-        return ','
     if type == 'tsv':
         return '\t'
     import csv
@@ -68,7 +66,7 @@ def run_intersect(hook: TaskHook):
     wd = get_wd(data.get('uid'))
     dfs = list()
     columns = data.get('columns')
-    out_name = f'intersection_{data.get("uid")}.tsv'
+    out_name = f'intersection_{data.get("uid")}.csv'
     for f in data.get('filenames'):
         file = f.split('.')
         type = f[len(file) - 1]
@@ -79,7 +77,7 @@ def run_intersect(hook: TaskHook):
     hook.set_progress(0.2, "Executing")
     result = ia.count_intersection(data=r, threshold=int(data.get('threshold')))
     hook.set_progress(0.5, "Writing files")
-    result.to_csv(os.path.join(wd, out_name), index=False, sep='\t')
+    result.to_csv(os.path.join(wd, out_name), index=False, sep=',')
     hook.set_progress(0.7, "Plotting")
     ia.plot_intersections(data= r, out_dir=wd, file_type = "png")
     hook.set_progress(0.9, "Collecting results")
@@ -96,6 +94,7 @@ def run_filter(hook: TaskHook):
     type = file[len(file) - 1]
     out_name = get_output_file_name(data.get('filename'), "filtered", type)
     sep = get_delimiter(os.path.join(wd, data.get('filename')), type)
+    print(f"Separator='{sep}'")
     hook.set_progress(0.15, "Reading data")
     df = pd.read_csv(os.path.join(wd, data.get('filename')), sep=sep)
     hook.set_progress(0.2, "Executing")

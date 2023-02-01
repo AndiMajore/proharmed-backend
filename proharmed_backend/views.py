@@ -31,10 +31,8 @@ def clear(request) -> Response:
     return Response({'uid': uid})
 
 
-def get_delimiter(file: str):
-    if file.endswith('csv'):
-        return ','
-    if file.endswith('tsv'):
+def get_delimiter(file, type):
+    if type == 'tsv':
         return '\t'
     import csv
     sniffer = csv.Sniffer()
