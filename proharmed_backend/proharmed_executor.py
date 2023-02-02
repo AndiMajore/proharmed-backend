@@ -1,12 +1,12 @@
 import os
 import zipfile
 
-from mqhandler import filter_ids as fi
-from mqhandler.mq_utils.plotting import *
-from mqhandler import remap_genenames as rmg
-from mqhandler import map_orthologs as mo
-from mqhandler import reduce_genenames as rdg
-from mqhandler import intersection_analysis as ia
+from proharmed import filter_ids as fi
+from proharmed.mq_utils.plotting import *
+from proharmed import remap_genenames as rmg
+from proharmed import map_orthologs as mo
+from proharmed import reduce_genenames as rdg
+from proharmed import intersection_analysis as ia
 
 
 

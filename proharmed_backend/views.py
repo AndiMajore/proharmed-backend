@@ -43,17 +43,6 @@ def get_delimiter(file: str):
             return sniffer.sniff(line).delimiter
     return ","
 
-@api_view(['GET'])
-def download_example_file(request) -> Response:
-    filename = request.GET.get('filename')
-    file = os.path.join("/usr/src/proharmed/examples",filename)
-    if file is not None:
-        response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
-        response['Content-Disposition'] = 'attachment; filename=' + smart_str(filename)
-        response['Content-Length'] = os.path.getsize(file)
-        return response
-    raise Http404
-
 
 @api_view(['GET'])
 def get_preview(request) -> Response:
@@ -62,6 +51,7 @@ def get_preview(request) -> Response:
     file = os.path.join(get_wd(uid), name)
     df = pd.read_csv(file, sep=get_delimiter(file))
     return Response(df.head(5).to_json())
+
 
 @api_view(['GET'])
 def get_file_content(request) -> Response:
@@ -222,3 +212,27 @@ def upload_file(req) -> Response:
         name = save_file(uid, req)
         return Response({"id": uid, "filename": name})
     return Response()
+
+
+@api_view(['GET'])
+def download_example_file(request) -> Response:
+    filename = request.GET.get('filename')
+    file = os.path.join("/usr/src/proharmed/examples", filename)
+    if file is not None:
+        response = StreamingHttpResponse(FileWrapper(open(file, 'rb'), 512), content_type=mimetypes.guess_type(file)[0])
+        response['Content-Disposition'] = 'attachment; filename=' + smart_str(filename)
+        response['Content-Length'] = os.path.getsize(file)
+        return response
+    raise Http404
+
+
+@api_view(['GET'])
+def set_example_file(req) -> Response:
+    uid = req.GET.get('uid')
+    name = req.GET.get('filename')
+    file = os.path.join("/usr/src/proharmed/examples", name)
+    wd = get_wd(uid)
+    if not os.path.exists(wd):
+        os.system(f"mkdir {wd}")
+    os.system(f"cp {file} {get_file_path(uid, name)}")
+    return Response({"id": uid, "filename": name})

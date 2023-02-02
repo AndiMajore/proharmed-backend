@@ -36,5 +36,6 @@ urlpatterns = [
     path('get_result_column', get_result_column),
     path('save_network', save_network),
     path('get_file_content', get_file_content),
-    path('download_example_file',download_example_file)
+    path('download_example_file',download_example_file),
+    path('set_example_file',set_example_file)
 ]
