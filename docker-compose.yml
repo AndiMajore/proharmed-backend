@@ -14,7 +14,7 @@ services:
 
     build: .
     env_file:
-      - '../docker-django.env.dev'
+      - './docker-django.env.dev'
     restart: always
     command:
       - "sh"
@@ -50,7 +50,7 @@ services:
     container_name: proharmed_celery
     hostname: proharmed_celery
     env_file:
-      - '../docker-django.env.dev'
+      - './docker-django.env.dev'
     volumes:
       - proharmed_data_volume:/tmp
     depends_on:
@@ -66,7 +66,7 @@ services:
     container_name: proharmed_celery_beat
     hostname: proharmed_celery_beat
     env_file:
-      - '../docker-django.env.dev'
+      - './docker-django.env.dev'
     depends_on:
       - redis
       - db
