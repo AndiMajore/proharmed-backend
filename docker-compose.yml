@@ -4,14 +4,17 @@ services:
   website:
     container_name: proharmed-frontend
     image: ghcr.io/andimajore/proharmed-frontend:main
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     ports:
         - "8111:80"
     restart: on-failure
 
   backend:
     image: ghcr.io/andimajore/proharmed-backend:main
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_backend
-
     build: .
     env_file:
       - '../docker-django.env.dev'
@@ -47,6 +50,8 @@ services:
       - "/usr/src/proharmed/scripts/start_celery_worker.sh"
     restart: always
     image: ghcr.io/andimajore/proharmed-backend:main
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_celery
     hostname: proharmed_celery
     env_file:
@@ -63,6 +68,8 @@ services:
       - "sh"
       - "/usr/src/proharmed/scripts/start_celery_beat.sh"
     image: ghcr.io/andimajore/proharmed-backend:main
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_celery_beat
     hostname: proharmed_celery_beat
     env_file:

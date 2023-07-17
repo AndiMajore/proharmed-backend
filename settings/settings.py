@@ -31,7 +31,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'mesidha.zbh.uni-hamburg.de',
     'proharmed.zbh.uni-hamburg.de',
-    '0.0.0.0'
+    '0.0.0.0',
+    'apps.cosy.bio'
 ]
 
 # Application definition
