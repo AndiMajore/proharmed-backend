@@ -1,8 +1,15 @@
 version: '3.3'
 
 services:
-  app:
-    image: andimajore/proharmed_backend:latest
+  website:
+    container_name: proharmed-frontend
+    image: ghcr.io/andimajore/proharmed-frontend:main
+    ports:
+        - "8111:80"
+    restart: on-failure
+
+  backend:
+    image: ghcr.io/andimajore/proharmed-backend:main
     container_name: proharmed_backend
 
     build: .
@@ -13,7 +20,7 @@ services:
       - "sh"
       - "/usr/src/proharmed/scripts/start_app.sh"
     ports:
-      - 8041:8000
+      - 8112:8000
     volumes:
       - proharmed_backend_volume:/usr/src/proharmed/database/migrations
       - proharmed_data_volume:/tmp
@@ -39,7 +46,7 @@ services:
       - "sh"
       - "/usr/src/proharmed/scripts/start_celery_worker.sh"
     restart: always
-    image: andimajore/proharmed_backend:latest
+    image: ghcr.io/andimajore/proharmed-backend:main
     container_name: proharmed_celery
     hostname: proharmed_celery
     env_file:
@@ -55,7 +62,7 @@ services:
     command:
       - "sh"
       - "/usr/src/proharmed/scripts/start_celery_beat.sh"
-    image: andimajore/proharmed_backend:latest
+    image: ghcr.io/andimajore/proharmed-backend:main
     container_name: proharmed_celery_beat
     hostname: proharmed_celery_beat
     env_file:
@@ -65,22 +72,11 @@ services:
       - db
     networks:
       - proharmed_net
-#  flower:
-#    image: mher/flower
-#    container_name: proharmed_flower
-#    env_file:
-#      - '../docker-django.env.dev'
-#    ports:
-#      - 8888:8888
-#    networks:
-#      - proharmed_net
   db:
     image: postgres
     restart: always
     container_name: proharmed_db
     hostname: db
-    ports:
-      - 5432:5432
     networks:
       - proharmed_net
     volumes:
