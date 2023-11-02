@@ -1,4 +1,4 @@
-FROM andimajore/miniconda3_mantic
+FROM andimajore/mamba_mantic
 WORKDIR /usr/src/proharmed/
 
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -11,7 +11,7 @@ RUN apt-get install -y supervisor nginx
 RUN apt-get install -y libgtk-3-dev
 RUN apt-get install wget
 
-RUN conda install conda python=3.9
+RUN mamba install conda python=3.9
 RUN pip install --upgrade pip
 
 RUN pip install psycopg2-binary

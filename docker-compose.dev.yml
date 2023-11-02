@@ -1,30 +1,23 @@
-version: "3.3"
+version: '3.3'
 
 services:
-  web:
-    image: andimajore/proharmed_frontend:latest
-    container_name: proharmed_frontend
-    ports:
-      - "8111:80"
-    restart: always
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  app:
-    image: andimajore/proharmed_backend:latest
+  backend:
+    image: ghcr.io/andimajore/proharmed-backend:main
     container_name: proharmed_backend
+    build: .
     env_file:
-      - 'docker-django.env.dev'
+      - '../docker-django.env.dev'
     restart: always
     command:
       - "sh"
       - "/usr/src/proharmed/scripts/start_app.sh"
     ports:
-      - "8112:8000"
+      - 8041:8000
+    volumes:
+      - proharmed_backend_volume:/usr/src/proharmed/database/migrations
+      - proharmed_data_volume:/tmp
     networks:
       - proharmed_net
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
       - db
       - redis
@@ -34,6 +27,8 @@ services:
     command: [ "redis-server" ]
     container_name: proharmed_redis
     hostname: proharmed_redis
+    volumes:
+      - proharmed_data_volume:/tmp
     networks:
       - proharmed_net
     depends_on:
@@ -43,36 +38,36 @@ services:
       - "sh"
       - "/usr/src/proharmed/scripts/start_celery_worker.sh"
     restart: always
-    image: andimajore/proharmed_backend:latest
+    image: ghcr.io/andimajore/proharmed-backend:main
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_celery
     hostname: proharmed_celery
     env_file:
-      - 'docker-django.env.dev'
+      - '../docker-django.env.dev'
     volumes:
-      - proharmed_volume:/usr/src/proharmed/mapping_files
+      - proharmed_data_volume:/tmp
     depends_on:
       - redis
       - db
     networks:
       - proharmed_net
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
   celery-beat:
     command:
       - "sh"
       - "/usr/src/proharmed/scripts/start_celery_beat.sh"
-    image: andimajore/proharmed_backend:latest
+    image: ghcr.io/andimajore/proharmed-backend:main
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_celery_beat
     hostname: proharmed_celery_beat
     env_file:
-      - 'docker-django.env.dev'
+      - '../docker-django.env.dev'
     depends_on:
       - redis
       - db
     networks:
       - proharmed_net
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
   db:
     image: postgres
     restart: always
@@ -97,5 +92,6 @@ networks:
   proharmed_net:
 
 volumes:
-  proharmed_volume:
   proharmed_db_volume:
+  proharmed_backend_volume:
+  proharmed_data_volume:
