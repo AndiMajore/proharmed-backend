@@ -39,8 +39,6 @@ services:
       - "/usr/src/proharmed/scripts/start_celery_worker.sh"
     restart: always
     image: ghcr.io/andimajore/proharmed-backend:main
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_celery
     hostname: proharmed_celery
     env_file:
@@ -57,8 +55,6 @@ services:
       - "sh"
       - "/usr/src/proharmed/scripts/start_celery_beat.sh"
     image: ghcr.io/andimajore/proharmed-backend:main
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
     container_name: proharmed_celery_beat
     hostname: proharmed_celery_beat
     env_file:
