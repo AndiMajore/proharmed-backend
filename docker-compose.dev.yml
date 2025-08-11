@@ -1,5 +1,3 @@
-version: '3.3'
-
 services:
   backend:
     image: ghcr.io/andimajore/proharmed-backend:main
@@ -22,7 +20,7 @@ services:
       - db
       - redis
   redis:
-    image: redis
+    image: redis:7.0.12
     restart: always
     command: [ "redis-server" ]
     container_name: proharmed_redis
