@@ -20,7 +20,7 @@ services:
       - db
       - redis
   redis:
-    image: redis:7.0.12
+    image: redis:8.2.0
     restart: always
     command: [ "redis-server" ]
     container_name: proharmed_redis
