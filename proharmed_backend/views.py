@@ -166,8 +166,11 @@ def save_file(uid, request: Request):
 @never_cache
 @api_view(['GET'])
 def init_task(req) -> Response:
+    print("INIT TASK")
     uid = get_uid()
+    print(uid)
     t = Task.objects.create(uid=uid, created_at=datetime.now(), mode=req.GET.get('mode'), directory=get_wd(uid))
+    print(t.uid)
     return Response({'uid': t.uid})
 
 
