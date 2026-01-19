@@ -14,4 +14,4 @@ tzdata
 cryptography==44.0.1  # Added to fix Observable Timing Discrepancy vulnerability
 certifi==2024.7.4
 idna==3.7
-urllib3==2.5.0
+urllib3==2.6.3
