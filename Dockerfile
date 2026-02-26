@@ -40,9 +40,11 @@ WORKDIR /usr/src/proharmed/
 RUN apt-get install -y supervisor nginx
 RUN apt-get install -y libgtk-3-dev
 
-RUN pip install psycopg2-binary
-COPY ./requirements.txt /usr/src/proharmed/requirements.txt
-RUN pip install -r /usr/src/proharmed/requirements.txt
+RUN pip install psycopg2-binary poetry poetry-plugin-export
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN pip install --no-cache-dir -r requirements.txt
 
 RUN pip install proharmed==0.0.6
 COPY . /usr/src/proharmed/
