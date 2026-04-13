@@ -17,11 +17,12 @@ RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubunt
 RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
 ENV CONDA_DIR /opt/conda
-RUN wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-RUN bash Miniforge3-$(uname)-$(uname -m).sh -b -p "${CONDA_DIR}"
+RUN wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+RUN bash Miniforge3-Linux-x86_64.sh -b -p "${CONDA_DIR}"
 ENV PATH=$CONDA_DIR/bin:$PATH
 RUN chmod +x "${CONDA_DIR}/etc/profile.d/conda.sh"
 RUN "${CONDA_DIR}/etc/profile.d/conda.sh"
+
 RUN chmod +x "${CONDA_DIR}/etc/profile.d/mamba.sh"
 RUN "${CONDA_DIR}/etc/profile.d/mamba.sh"
 
